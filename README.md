@@ -1,3 +1,3 @@
 # graph_eigen
-hello
-test
+run with
+```sage app.py```
