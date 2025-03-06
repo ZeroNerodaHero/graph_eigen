@@ -40,9 +40,10 @@ class GraphApp:
 
         options = [
             {"name": "V - Add Vertex", "command": self.add_vertex, "shortcut": "v"},
-            {"name": "E - Create Complete", "command": self.create_K, "shortcut": "e"},
+            {"name": "K - Create Complete", "command": self.create_K, "shortcut": "k"},
             {"name": "S - Create Star", "command": self.create_star, "shortcut": "s"},
             {"name": "D - Delete Edges", "command": self.clear_edges, "shortcut": "d"},
+            {"name": "R - Delete Vertex", "command": self.clear_vertex, "shortcut": "r"},
             {"name": "C - Clear Selected", "command": self.clear_selection, "shortcut": "c"}
         ]
 
@@ -90,6 +91,25 @@ class GraphApp:
                 self.adjacency_matrix = np.vstack([self.adjacency_matrix, new_row])
                 self.adjacency_matrix = np.hstack([self.adjacency_matrix, new_col])
             self.calculate_eigens()
+    def clear_vertex(self, event=None):
+        for name in self.selected_vertex:
+            for vert in self.vertices:
+                self.deleteEdge(name,vert)
+        for name in self.selected_vertex:
+            oval, text = self.vertex_objects[name]
+            self.canvas.delete(oval)
+            self.canvas.delete(text)
+            
+
+            location = list(self.vertices.keys()).index(name)
+            self.adjacency_matrix = np.delete(self.adjacency_matrix, location, axis=0)
+            self.adjacency_matrix = np.delete(self.adjacency_matrix, location, axis=1)
+            del self.vertices[name]
+            del self.vertex_objects[name]
+        self.selected_vertex = []
+        self.calculate_eigens()
+        self.update_edges()
+
 
     def create_K(self, event=None):
         for i in range(len(self.selected_vertex)):
@@ -221,16 +241,51 @@ class GraphApp:
         self.info_text.insert(1.0, 
             "Adjacency Matrix:\n" + str(adj_matrix_str) + "\n\n"+
             "Adjacency Eigenvalues:\n" + str(ADJeigenvalues) + "\n\n"+
-            "Adj. Characteristic Poly:\n" + str(ADJcharpoly) + "\n\n"+
+            "Adj. Characteristic Poly:\n" + polytounicode(str(ADJcharpoly)) + "\n\n"+
             "Laplacian Matrix:\n" + str(laplacian_str) + "\n\n"+
             "Laplacian Eigenvalues:\n" + str(LAPeigenvalues) + "\n\n"+
-            "Lap. Characteristic Poly:\n" + str(LAPcharpoly) + "\n\n"+
+            "Lap. Characteristic Poly:\n" + polytounicode(str(LAPcharpoly)) + "\n\n"+
             "-"*20 + "\n\n"
         )
     def clearlog(self):
         self.info_text.delete(1.0, tk.END)
         self.info_text.insert(1.0, "Cleared log\n")
 
+def polytounicode(str):
+    conversion = {
+        "0": "⁰",
+        "1": "¹",
+        "2": "²",
+        "3": "³",
+        "4": "⁴",
+        "5": "⁵",
+        "6": "⁶",
+        "7": "⁷",
+        "8": "⁸",
+        "9": "⁹",
+        "-": "⁻",
+        "+": "⁺",
+        ".": "·"
+    }
+    #state = 0 means has not found the ^ yet
+    #state = 1 means has found the ^ and is currently converting the number
+
+    state = 0
+    ret = ""
+    for it in str:
+        if it == "^":
+            state = 1
+            continue
+        if state == 1:
+            if it.isdigit():
+                ret += conversion[it]
+            else:
+                state = 0
+                ret += it
+        else:
+            ret += it
+    return ret
+        
     
 
 
