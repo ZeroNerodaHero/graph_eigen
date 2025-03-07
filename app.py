@@ -154,27 +154,28 @@ class GraphApp:
     '''
     def start_drag(self, event):
         overlap = self.canvas.find_overlapping(event.x-5, event.y-5,event.x+5, event.y+5)
-        if(len(overlap) == 0):
+        item = None
+        #find vertex that overlaps with the click
+        for i in overlap:
+            for name,(oval,text) in self.vertex_objects.items():
+                if i == oval or i == text:
+                    item = name
+                    break
+        if item == None:
             return
-        item = overlap[0]
-        for name, (oval, text) in self.vertex_objects.items():
-            if item in (oval, text):
-                #print ("Before",self.selected_vertex)
-                if name in self.selected_vertex:
-                    self.selected_vertex.remove(name)
-                    self.canvas.itemconfig(oval, fill="yellow")
-                else:
-                    if len(self.selected_vertex) != 0:
-                        last_select = self.selected_vertex[len(self.selected_vertex)-1]
-                        last_oval, last_text = self.vertex_objects[last_select]
-                        self.canvas.itemconfig(last_oval, fill="red")
-                    self.selected_vertex.append(name)
-                    self.dragging_vertex = name
-                    self.canvas.itemconfig(oval, fill="green")
+        #do stuff depending on if the it selected
+        if name in self.selected_vertex:
+            self.selected_vertex.remove(name)
+            self.canvas.itemconfig(oval, fill="yellow")
+        else:
+            if len(self.selected_vertex) != 0:
+                last_select = self.selected_vertex[len(self.selected_vertex)-1]
+                last_oval, last_text = self.vertex_objects[last_select]
+                self.canvas.itemconfig(last_oval, fill="red")
+            self.selected_vertex.append(name)
+            self.dragging_vertex = name
+            self.canvas.itemconfig(oval, fill="green")
 
-                #print ("After",self.selected_vertex)
-                break
-            
     def drag_vertex(self, event):
         if self.dragging_vertex:
             x, y = event.x, event.y
@@ -220,6 +221,8 @@ class GraphApp:
             x1, y1 = self.vertices[v1]
             x2, y2 = self.vertices[v2]
             self.canvas.create_line(x1, y1, x2, y2, fill="black", width=2, tags="edge")
+        for vertex in self.vertices:
+            self.canvas.tag_raise(vertex)
 
     def calculate_eigens(self):
         ADJ = Matrix(self.adjacency_matrix)
@@ -239,6 +242,8 @@ class GraphApp:
 
         #self.info_text.delete(1.0, tk.END)
         self.info_text.insert(1.0, 
+            "Vertices n = " + str(len(self.vertices)) + "\n"+
+            "Edges e = " + str(len(self.edges)) + "\n\n"+
             "Adjacency Matrix:\n" + str(adj_matrix_str) + "\n\n"+
             "Adjacency Eigenvalues:\n" + str(ADJeigenvalues) + "\n\n"+
             "Adj. Characteristic Poly:\n" + polytounicode(str(ADJcharpoly)) + "\n\n"+
